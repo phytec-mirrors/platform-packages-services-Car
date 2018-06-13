@@ -18,6 +18,7 @@ package com.android.car;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -313,6 +314,76 @@ public class CarUserManagerHelperTest {
         String newName = "New Test Name";
         mHelper.setUserName(testInfo, newName);
         verify(mUserManager).setUserName(mCurrentProcessUser.id + 3, newName);
+    }
+
+    @Test
+    public void testIsCurrentProcessSystemUser() {
+        when(mUserManager.isAdminUser()).thenReturn(true);
+        assertThat(mHelper.isCurrentProcessAdminUser()).isTrue();
+
+        when(mUserManager.isAdminUser()).thenReturn(false);
+        assertThat(mHelper.isCurrentProcessAdminUser()).isFalse();
+    }
+
+    @Test
+    public void testAssignAdminPrivileges() {
+        int userId = 30;
+        UserInfo testInfo = createUserInfoForId(userId);
+
+        // Test that non-admins cannot assign admin privileges.
+        when(mUserManager.isAdminUser()).thenReturn(false); // Current user non-admin.
+        mHelper.assignAdminPrivileges(testInfo);
+        verify(mUserManager, never()).setUserAdmin(userId);
+
+        // Admins can assign admin privileges.
+        when(mUserManager.isAdminUser()).thenReturn(true);
+        mHelper.assignAdminPrivileges(testInfo);
+        verify(mUserManager).setUserAdmin(userId);
+    }
+
+    @Test
+    public void testSetUserRestriction() {
+        int userId = 20;
+        UserInfo testInfo = createUserInfoForId(userId);
+
+        mHelper.setUserRestriction(testInfo, UserManager.DISALLOW_ADD_USER, /* enable= */ true);
+        verify(mUserManager).setUserRestriction(
+                UserManager.DISALLOW_ADD_USER, true, UserHandle.of(userId));
+
+        mHelper.setUserRestriction(testInfo, UserManager.DISALLOW_REMOVE_USER, /* enable= */ false);
+        verify(mUserManager).setUserRestriction(
+                UserManager.DISALLOW_REMOVE_USER, false, UserHandle.of(userId));
+    }
+
+    @Test
+    public void testDefaultNonAdminRestrictions() {
+        String testUserName = "Test User";
+        int testUserId = 20;
+        boolean restrictionEnabled = true;
+        UserInfo newNonAdmin = createUserInfoForId(testUserId);
+        when(mUserManager.createUser(testUserName, /* flags= */ 0)).thenReturn(newNonAdmin);
+
+        mHelper.createNewNonAdminUser(testUserName);
+
+        verify(mUserManager).setUserRestriction(
+                UserManager.DISALLOW_REMOVE_USER, restrictionEnabled, UserHandle.of(testUserId));
+        verify(mUserManager).setUserRestriction(
+                UserManager.DISALLOW_FACTORY_RESET, restrictionEnabled, UserHandle.of(testUserId));
+    }
+
+    @Test
+    public void testAssigningAdminPrivilegesRemovesNonAdminRestrictions() {
+        int testUserId = 30;
+        boolean restrictionEnabled = false;
+        UserInfo testInfo = createUserInfoForId(testUserId);
+        when(mUserManager.isAdminUser()).thenReturn(true); // Only admins can assign privileges.
+
+        mHelper.assignAdminPrivileges(testInfo);
+
+        verify(mUserManager).setUserRestriction(
+                UserManager.DISALLOW_REMOVE_USER, restrictionEnabled, UserHandle.of(testUserId));
+        verify(mUserManager).setUserRestriction(
+                UserManager.DISALLOW_FACTORY_RESET, restrictionEnabled, UserHandle.of(testUserId));
     }
 
     @Test
