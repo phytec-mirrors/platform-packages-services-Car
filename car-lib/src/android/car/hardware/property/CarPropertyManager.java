@@ -18,6 +18,7 @@ package android.car.hardware.property;
 
 import static java.lang.Integer.toHexString;
 
+import android.annotation.Nullable;
 import android.car.CarApiUtil;
 import android.car.CarManagerBase;
 import android.car.CarNotConnectedException;
@@ -70,7 +71,7 @@ public class CarPropertyManager implements CarManagerBase {
     /**
      * Get an instance of the CarPropertyManager.
      */
-    public CarPropertyManager(IBinder service, Handler handler, boolean dbg, String tag) {
+    public CarPropertyManager(IBinder service, @Nullable Handler handler, boolean dbg, String tag) {
         mDbg = dbg;
         mTag = tag;
         mService = ICarProperty.Stub.asInterface(service);
@@ -79,6 +80,10 @@ public class CarPropertyManager implements CarManagerBase {
         } catch (Exception e) {
             Log.e(mTag, "getPropertyList exception ", e);
             throw new RuntimeException(e);
+        }
+        if (handler == null) {
+            mHandler = null;
+            return;
         }
         mHandler = new SingleMessageHandler<CarPropertyEvent>(handler.getLooper(),
                 MSG_GENERIC_EVENT) {
@@ -161,7 +166,9 @@ public class CarPropertyManager implements CarManagerBase {
     }
 
     private void handleEvent(List<CarPropertyEvent> events) {
-        mHandler.sendEvents(events);
+        if (mHandler != null) {
+            mHandler.sendEvents(events);
+        }
     }
 
     /**
@@ -282,6 +289,26 @@ public class CarPropertyManager implements CarManagerBase {
     public int getIntProperty(int prop, int area) throws CarNotConnectedException {
         CarPropertyValue<Integer> carProp = getProperty(Integer.class, prop, area);
         return carProp != null ? carProp.getValue() : 0;
+    }
+
+    /**
+     * Returns value of a integer array property
+     *
+     * @param prop Property ID to get
+     * @param area Zone of the property to get
+     */
+    public int[] getIntArrayProperty(int prop, int area) throws CarNotConnectedException {
+        CarPropertyValue<Integer[]> carProp = getProperty(Integer[].class, prop, area);
+        return carProp != null ? toIntArray(carProp.getValue()) : new int[0];
+    }
+
+    private static int[] toIntArray(Integer[] input) {
+        int len = input.length;
+        int[] arr = new int[len];
+        for (int i = 0; i < len; i++) {
+            arr[i] = input[i];
+        }
+        return arr;
     }
 
     /** Return CarPropertyValue */
