@@ -28,6 +28,7 @@ import android.content.pm.UserInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -61,6 +62,18 @@ public class CarUserManagerHelper {
      */
     private static final Set<String> DEFAULT_NON_ADMIN_RESTRICTIONS = Sets.newArraySet(
             UserManager.DISALLOW_FACTORY_RESET
+    );
+    /**
+     * Default set of restrictions for Guest users.
+     */
+    private static final Set<String> DEFAULT_GUEST_RESTRICTIONS = Sets.newArraySet(
+            UserManager.DISALLOW_FACTORY_RESET,
+            UserManager.DISALLOW_REMOVE_USER,
+            UserManager.DISALLOW_MODIFY_ACCOUNTS,
+            UserManager.DISALLOW_OUTGOING_CALLS,
+            UserManager.DISALLOW_SMS,
+            UserManager.DISALLOW_INSTALL_APPS,
+            UserManager.DISALLOW_UNINSTALL_APPS
     );
 
     private final Context mContext;
@@ -184,7 +197,7 @@ public class CarUserManagerHelper {
 
     /**
      * Get user id for the initial user to boot into. This is only applicable for headless
-     * user 0 model.
+     * system user model.
      *
      * <p>If failed to retrieve the id stored in global settings or the retrieved id does not
      * exist on device, then return the user with smallest user id.
@@ -213,6 +226,19 @@ public class CarUserManagerHelper {
         }
 
         return lastActiveUserId;
+    }
+
+    /**
+     * Sets default guest restrictions that will be applied every time a Guest user is created.
+     *
+     * <p> Restrictions are written to disk and persistent across boots.
+     */
+    public void initDefaultGuestRestrictions() {
+        Bundle defaultGuestRestrictions = new Bundle();
+        for (String restriction : DEFAULT_GUEST_RESTRICTIONS) {
+            defaultGuestRestrictions.putBoolean(restriction, true);
+        }
+        mUserManager.setDefaultGuestRestrictions(defaultGuestRestrictions);
     }
 
     /**
@@ -339,6 +365,24 @@ public class CarUserManagerHelper {
     }
 
     /**
+     * Gets all users that are not guests.
+     *
+     * @return List of {@code UserInfo} for all users who are not guest users.
+     */
+    public List<UserInfo> getAllUsersExceptGuests() {
+        List<UserInfo> users = getAllUsers();
+
+        for (Iterator<UserInfo> iterator = users.iterator(); iterator.hasNext(); ) {
+            UserInfo userInfo = iterator.next();
+            if (userInfo.isGuest()) {
+                // Remove guests.
+                iterator.remove();
+            }
+        }
+        return users;
+    }
+
+    /**
      * Get all the users except the one with userId passed in.
      *
      * @param userId of the user not to be returned.
@@ -374,6 +418,62 @@ public class CarUserManagerHelper {
             }
         }
         return users;
+    }
+
+    /**
+     * Maximum number of users allowed on the device. This includes real users, managed profiles
+     * and restricted users, but excludes guests.
+     *
+     * <p> It excludes system user in headless system user model.
+     *
+     * @return Maximum number of users that can be present on the device.
+     */
+    public int getMaxSupportedUsers() {
+        if (isHeadlessSystemUser()) {
+            return UserManager.getMaxSupportedUsers() - 1;
+        }
+        return UserManager.getMaxSupportedUsers();
+    }
+
+    /**
+     * Get the maximum number of real (non-guest, non-managed profile) users that can be created on
+     * the device. This is a dynamic value and it decreases with the increase of the number of
+     * managed profiles on the device.
+     *
+     * <p> It excludes system user in headless system user model.
+     *
+     * @return Maximum number of real users that can be created.
+     */
+    public int getMaxSupportedRealUsers() {
+        return getMaxSupportedUsers() - getManagedProfilesCount();
+    }
+
+    /**
+     * Returns true if the maximum number of users on the device has been reached, false otherwise.
+     */
+    public boolean isUserLimitReached() {
+        int countNonGuestUsers = getAllUsersExceptGuests().size();
+        int maxSupportedUsers = getMaxSupportedUsers();
+
+        if (countNonGuestUsers > maxSupportedUsers) {
+            Log.e(TAG, "There are more users on the device than allowed.");
+            return true;
+        }
+
+        return getAllUsersExceptGuests().size() == maxSupportedUsers;
+    }
+
+    private int getManagedProfilesCount() {
+        List<UserInfo> users = getAllUsers();
+
+        // Count all users that are managed profiles of another user.
+        int managedProfilesCount = 0;
+        for (UserInfo user : users) {
+            if (user.isManagedProfile()) {
+                managedProfilesCount++;
+            }
+        }
+        return managedProfilesCount;
     }
 
     // User information accessors
