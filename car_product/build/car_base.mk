@@ -34,7 +34,6 @@ PRODUCT_PACKAGES += \
     Launcher2 \
     ManagedProvisioning \
     PacProcessor \
-    libpac \
     PrintSpooler \
     ProxyHandler \
     Settings \
@@ -43,6 +42,7 @@ PRODUCT_PACKAGES += \
     MmsService \
     ExternalStorageProvider \
     atrace \
+    cameraserver \
     libandroidfw \
     libaudioutils \
     libmdnssd \
