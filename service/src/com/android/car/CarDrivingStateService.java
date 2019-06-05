@@ -17,7 +17,6 @@
 package com.android.car;
 
 import android.annotation.Nullable;
-import android.car.Car;
 import android.car.VehicleAreaType;
 import android.car.drivingstate.CarDrivingStateEvent;
 import android.car.drivingstate.CarDrivingStateEvent.CarDrivingState;
@@ -219,15 +218,6 @@ public class CarDrivingStateService extends ICarDrivingState.Stub implements Car
     @Nullable
     public synchronized CarDrivingStateEvent getCurrentDrivingState() {
         return mCurrentDrivingState;
-    }
-
-    @Override
-    public synchronized void injectDrivingState(CarDrivingStateEvent event) {
-        ICarImpl.assertPermission(mContext, Car.PERMISSION_CONTROL_APP_BLOCKING);
-
-        for (DrivingStateClient client : mDrivingStateClients) {
-            client.dispatchEventToClients(event);
-        }
     }
 
     /**
