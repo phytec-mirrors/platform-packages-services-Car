@@ -505,9 +505,6 @@ public class CarTrustAgentEnrollmentService extends ICarTrustAgentEnrollment.Stu
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Sending handle: " + handle);
         }
-        mCarTrustAgentBleManager.sendEnrollmentMessage(mRemoteEnrollmentDevice,
-                mEncryptionKey.encryptData(Utils.longToBytes(handle)),
-                OperationType.CLIENT_MESSAGE, /* isPayloadEncrypted= */ true);
         mHandle = handle;
     }
 
@@ -589,6 +586,10 @@ public class CarTrustAgentEnrollmentService extends ICarTrustAgentEnrollment.Stu
         }
         switch (mEnrollmentState) {
             case ENROLLMENT_STATE_NONE:
+                if (!CarTrustAgentValidator.isValidEnrollmentDeviceId(value)) {
+                    Log.e(TAG, "Device id rejected by validator.");
+                    return;
+                }
                 notifyDeviceIdReceived(value);
                 break;
             case ENROLLMENT_STATE_UNIQUE_ID:
