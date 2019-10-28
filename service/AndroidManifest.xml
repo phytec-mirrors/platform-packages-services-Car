@@ -475,6 +475,16 @@
         android:label="@string/car_permission_label_enroll_trust"
         android:description="@string/car_permission_desc_enroll_trust" />
 
+    <!-- Allows a test application to control car service's testing mode.
+         This is only for platform level testing.
+         <p>Protection level: signature|privileged
+    -->
+    <permission
+        android:name="android.car.permission.CAR_TEST_SERVICE"
+        android:protectionLevel="signature|privileged"
+        android:label="@string/car_permission_label_car_test_service"
+        android:description="@string/car_permission_desc_car_test_service" />
+
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.DEVICE_POWER" />
     <uses-permission android:name="android.permission.GRANT_RUNTIME_PERMISSIONS" />
@@ -492,6 +502,7 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.MANAGE_APP_OPS_MODES" />
     <uses-permission android:name="android.permission.MANAGE_USERS" />
     <uses-permission android:name="android.permission.LOCATION_HARDWARE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

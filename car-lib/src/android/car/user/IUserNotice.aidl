@@ -13,24 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.car.cluster.renderer;
+
+package android.car.user;
 
 /**
- * Exception denoting invalid size of an object.
- * eg.) Minimum size of an image
- *
+ * Binder for UserNotice UI to notify status change to CarUserNoticeService/CarService.
+ * This binder is implemented inside CarService.
  * @hide
- */
-public class InvalidSizeException extends Exception {
-    public InvalidSizeException(String message) {
-        super(message);
-    }
-
-    public InvalidSizeException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public InvalidSizeException(Throwable cause) {
-        super(cause);
-    }
+*/
+interface IUserNotice {
+    /**
+     * Notify CarUserNoticeService/CarSercice that UI dialog is dismissed.
+     * CarUserNoticeService will unbind the UI servie to finish it.
+     */
+    void onDialogDismissed();
 }

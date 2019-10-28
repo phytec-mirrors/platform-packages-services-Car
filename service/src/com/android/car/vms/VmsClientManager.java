@@ -63,7 +63,7 @@ import java.util.stream.Stream;
  * according to the Android user lifecycle.
  */
 public class VmsClientManager implements CarServiceBase {
-    private static final boolean DBG = true;
+    private static final boolean DBG = false;
     private static final String TAG = "VmsClientManager";
     private static final String HAL_CLIENT_NAME = "HalClient";
     private static final String UNKNOWN_PACKAGE = "UnknownPackage";
@@ -146,16 +146,16 @@ public class VmsClientManager implements CarServiceBase {
             CarUserService userService, CarUserManagerHelper userManagerHelper,
             VmsHalService halService) {
         this(context, brokerService, userService, userManagerHelper, halService,
-                Binder::getCallingUid);
+                new Handler(Looper.getMainLooper()), Binder::getCallingUid);
     }
 
     @VisibleForTesting
     VmsClientManager(Context context, VmsBrokerService brokerService,
             CarUserService userService, CarUserManagerHelper userManagerHelper,
-            VmsHalService halService, IntSupplier getCallingUid) {
+            VmsHalService halService, Handler handler, IntSupplier getCallingUid) {
         mContext = context;
         mPackageManager = context.getPackageManager();
-        mHandler = new Handler(Looper.getMainLooper());
+        mHandler = handler;
         mUserManager = (UserManager) mContext.getSystemService(Context.USER_SERVICE);
         mUserService = userService;
         mUserManagerHelper = userManagerHelper;
@@ -240,7 +240,7 @@ public class VmsClientManager implements CarServiceBase {
      */
     public void addSubscriber(IVmsSubscriberClient subscriberClient) {
         if (subscriberClient == null) {
-            Log.e(TAG, "Trying to add a null subscriber.");
+            Log.e(TAG, "Trying to add a null subscriber: " + getCallingPackage());
             throw new IllegalArgumentException("subscriber cannot be null.");
         }
 
@@ -286,9 +286,11 @@ public class VmsClientManager implements CarServiceBase {
      * Returns all active subscriber clients.
      */
     public Collection<IVmsSubscriberClient> getAllSubscribers() {
-        return mSubscribers.values().stream()
-                .map(subscriber -> subscriber.mClient)
-                .collect(Collectors.toList());
+        synchronized (mLock) {
+            return mSubscribers.values().stream()
+                    .map(subscriber -> subscriber.mClient)
+                    .collect(Collectors.toList());
+        }
     }
 
     /**
@@ -401,7 +403,7 @@ public class VmsClientManager implements CarServiceBase {
         }
 
         if (!Car.PERMISSION_BIND_VMS_CLIENT.equals(serviceInfo.permission)) {
-            Log.w(TAG, "Client service: " + clientName
+            Log.e(TAG, "Client service: " + clientName
                     + " does not require " + Car.PERMISSION_BIND_VMS_CLIENT + " permission");
             return;
         }
@@ -411,7 +413,7 @@ public class VmsClientManager implements CarServiceBase {
             Log.i(TAG, "Client bound: " + connection);
             connectionMap.put(clientName, connection);
         } else {
-            Log.w(TAG, "Binding failed: " + connection);
+            Log.e(TAG, "Binding failed: " + connection);
         }
     }
 
@@ -491,7 +493,7 @@ public class VmsClientManager implements CarServiceBase {
                 return;
             }
 
-            if (DBG) Log.d(TAG, "rebinding: " + mFullName);
+            Log.i(TAG, "Rebinding: " + mFullName);
             // Ensure that the client is not bound before attempting to rebind.
             // If the client is not currently bound, unbind() will have no effect.
             unbind();

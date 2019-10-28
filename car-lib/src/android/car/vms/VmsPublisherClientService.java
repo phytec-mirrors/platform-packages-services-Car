@@ -20,6 +20,7 @@ package android.car.vms;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.app.Service;
+import android.car.Car;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
@@ -53,7 +54,7 @@ import java.lang.ref.WeakReference;
  */
 @SystemApi
 public abstract class VmsPublisherClientService extends Service {
-    private static final boolean DBG = true;
+    private static final boolean DBG = false;
     private static final String TAG = "VmsPublisherClientService";
 
     private final Object mLock = new Object();
@@ -66,17 +67,13 @@ public abstract class VmsPublisherClientService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        if (DBG) {
-            Log.d(TAG, "onBind, intent: " + intent);
-        }
+        if (DBG) Log.d(TAG, "onBind, intent: " + intent);
         return mVmsPublisherClient.asBinder();
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        if (DBG) {
-            Log.d(TAG, "onUnbind, intent: " + intent);
-        }
+        if (DBG) Log.d(TAG, "onUnbind, intent: " + intent);
         stopSelf();
         return super.onUnbind(intent);
     }
@@ -111,16 +108,14 @@ public abstract class VmsPublisherClientService extends Service {
      */
     public final void publish(@NonNull VmsLayer layer, int publisherId, byte[] payload) {
         Preconditions.checkNotNull(layer, "layer cannot be null");
-        if (DBG) {
-            Log.d(TAG, "Publishing for layer : " + layer);
-        }
+        if (DBG) Log.d(TAG, "Publishing for layer : " + layer);
 
         IBinder token = getTokenForPublisherServiceThreadSafe();
 
         try {
             mVmsPublisherService.publish(token, layer, publisherId, payload);
         } catch (RemoteException e) {
-            throw e.rethrowFromSystemServer();
+            Car.handleRemoteExceptionFromCarService(this, e);
         }
     }
 
@@ -132,9 +127,7 @@ public abstract class VmsPublisherClientService extends Service {
      */
     public final void setLayersOffering(@NonNull VmsLayersOffering offering) {
         Preconditions.checkNotNull(offering, "offering cannot be null");
-        if (DBG) {
-            Log.d(TAG, "Setting layers offering : " + offering);
-        }
+        if (DBG) Log.d(TAG, "Setting layers offering : " + offering);
 
         IBinder token = getTokenForPublisherServiceThreadSafe();
 
@@ -142,7 +135,7 @@ public abstract class VmsPublisherClientService extends Service {
             mVmsPublisherService.setLayersOffering(token, offering);
             VmsOperationRecorder.get().setLayersOffering(offering);
         } catch (RemoteException e) {
-            throw e.rethrowFromSystemServer();
+            Car.handleRemoteExceptionFromCarService(this, e);
         }
     }
 
@@ -177,9 +170,10 @@ public abstract class VmsPublisherClientService extends Service {
         }
         int publisherId;
         try {
-            Log.i(TAG, "Getting publisher static ID");
             publisherId = mVmsPublisherService.getPublisherId(publisherInfo);
+            Log.i(TAG, "Assigned publisher ID: " + publisherId);
         } catch (RemoteException e) {
+            // This will crash. To prevent crash, safer invalid return value should be defined.
             throw e.rethrowFromSystemServer();
         }
         VmsOperationRecorder.get().getPublisherId(publisherId);
@@ -199,7 +193,7 @@ public abstract class VmsPublisherClientService extends Service {
         try {
             return mVmsPublisherService.getSubscriptions();
         } catch (RemoteException e) {
-            throw e.rethrowFromSystemServer();
+            return Car.handleRemoteExceptionFromCarService(this, e, null);
         }
     }
 
@@ -227,9 +221,7 @@ public abstract class VmsPublisherClientService extends Service {
 
             VmsPublisherClientService vmsPublisherClientService = mVmsPublisherClientService.get();
             if (vmsPublisherClientService == null) return;
-            if (DBG) {
-                Log.d(TAG, "setting VmsPublisherService.");
-            }
+            if (DBG) Log.d(TAG, "setting VmsPublisherService.");
             Handler handler = vmsPublisherClientService.mHandler;
             handler.sendMessage(
                     handler.obtainMessage(VmsEventHandler.SET_SERVICE_CALLBACK, service));
@@ -242,9 +234,7 @@ public abstract class VmsPublisherClientService extends Service {
 
             VmsPublisherClientService vmsPublisherClientService = mVmsPublisherClientService.get();
             if (vmsPublisherClientService == null) return;
-            if (DBG) {
-                Log.d(TAG, "subscription event: " + subscriptionState);
-            }
+            if (DBG) Log.d(TAG, "subscription event: " + subscriptionState);
             synchronized (mSequenceLock) {
                 if (subscriptionState.getSequenceNumber() <= mSequence) {
                     Log.w(TAG, "Sequence out of order. Current sequence = " + mSequence
