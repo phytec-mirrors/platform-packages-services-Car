@@ -49,15 +49,16 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Rect;
+import android.net.wifi.WifiClient;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.LocalOnlyHotspotCallback;
 import android.net.wifi.WifiManager.LocalOnlyHotspotReservation;
-import android.net.wifi.WifiManager.SoftApCallback;
 import android.net.wifi.WifiScanner;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerExecutor;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
@@ -595,7 +596,7 @@ class CarProjectionService extends ICarProjection.Stub implements CarServiceBase
 
         if (mSoftApCallback == null) {
             mSoftApCallback = new ProjectionSoftApCallback();
-            mWifiManager.registerSoftApCallback(mSoftApCallback, mHandler);
+            mWifiManager.registerSoftApCallback(new HandlerExecutor(mHandler), mSoftApCallback);
             ensureApConfiguration();
         }
 
@@ -940,7 +941,7 @@ class CarProjectionService extends ICarProjection.Stub implements CarServiceBase
         }
     }
 
-    private class ProjectionSoftApCallback implements SoftApCallback {
+    private class ProjectionSoftApCallback implements WifiManager.SoftApCallback {
         private boolean mCurrentStateCall = true;
 
         @Override
@@ -982,8 +983,11 @@ class CarProjectionService extends ICarProjection.Stub implements CarServiceBase
         }
 
         @Override
-        public void onNumClientsChanged(int numClients) {
-            Log.i(TAG, "ProjectionSoftApCallback, onNumClientsChanged: " + numClients);
+        public void onConnectedClientsChanged(List<WifiClient> clients) {
+            if (DBG) {
+                Log.d(TAG, "ProjectionSoftApCallback, onConnectedClientsChanged with "
+                        + clients.size() + " clients");
+            }
         }
     }
 
