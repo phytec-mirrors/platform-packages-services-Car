@@ -25,6 +25,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SdkConstant;
 import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SystemApi;
+import android.annotation.TestApi;
 import android.app.Activity;
 import android.app.Service;
 import android.car.annotation.MandatoryFeature;
@@ -51,6 +52,7 @@ import android.car.storagemonitoring.CarStorageMonitoringManager;
 import android.car.test.CarTestManagerBinderWrapper;
 import android.car.trust.CarTrustAgentEnrollmentManager;
 import android.car.user.CarUserManager;
+import android.car.vms.VmsClientManager;
 import android.car.vms.VmsSubscriberManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -61,6 +63,7 @@ import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.TransactionTooLargeException;
@@ -133,6 +136,7 @@ public final class Car {
      */
     @MandatoryFeature
     @SystemApi
+    @TestApi
     public static final String CAR_USER_SERVICE = "car_user_service";
 
     /**
@@ -210,6 +214,11 @@ public final class Car {
      */
     @MandatoryFeature
     public static final String BLUETOOTH_SERVICE = "car_bluetooth";
+
+    /**
+     * @hide
+     */
+    public static final String VEHICLE_MAP_SERVICE = "vehicle_map_service";
 
     /**
      * @hide
@@ -1530,12 +1539,19 @@ public final class Car {
             return;
         } else if (mContext instanceof Service) {
             Service service = (Service) mContext;
-            throw new IllegalStateException("Car service has crashed, client not handle it:"
-                    + service.getPackageName() + "," + service.getClass().getSimpleName(),
-                    mConstructionStack);
+            killClient(service.getPackageName() + "," + service.getClass().getSimpleName());
+        } else {
+            killClient(/* clientInfo= */ null);
         }
-        throw new IllegalStateException("Car service crashed, client not handling it.",
+    }
+
+    private void killClient(@Nullable String clientInfo) {
+        Log.w(TAG_CAR, "**Car service has crashed. Client(" + clientInfo + ") is not handling it."
+                        + " Client should use Car.createCar(..., CarServiceLifecycleListener, .."
+                        + ".) to handle it properly. Check pritned callstack to check where other "
+                        + "version of Car.createCar() was called. Killing the client process**",
                 mConstructionStack);
+        Process.killProcess(Process.myPid());
     }
 
     /** @hide */
@@ -1614,6 +1630,9 @@ public final class Car {
                 /* CarTestManager exist in static library. So instead of constructing it here,
                  * only pass binder wrapper so that CarTestManager can be constructed outside. */
                 manager = new CarTestManagerBinderWrapper(this, binder);
+                break;
+            case VEHICLE_MAP_SERVICE:
+                manager = new VmsClientManager(this, binder);
                 break;
             case VMS_SUBSCRIBER_SERVICE:
                 manager = new VmsSubscriberManager(this, binder);
