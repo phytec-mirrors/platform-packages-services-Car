@@ -238,7 +238,9 @@ package android.car.cluster.renderer {
     method @MainThread public void onKeyEvent(@NonNull android.view.KeyEvent);
     method @MainThread public void onNavigationComponentLaunched();
     method @MainThread public void onNavigationComponentReleased();
+    method public boolean startFixedActivityModeForDisplayAndUser(@NonNull android.content.Intent, @NonNull android.app.ActivityOptions, int);
     method protected boolean startNavigationActivity(@NonNull android.content.ComponentName);
+    method public void stopFixedActivityMode(int);
   }
 
   @UiThread public abstract class NavigationRenderer {
@@ -847,6 +849,20 @@ package android.car.media {
     field public static final android.os.Parcelable.Creator<android.car.media.CarAudioPatchHandle> CREATOR;
   }
 
+  public final class CarMediaManager {
+    method @RequiresPermission(android.Manifest.permission.MEDIA_CONTENT_CONTROL) public void addMediaSourceListener(@NonNull android.car.media.CarMediaManager.MediaSourceChangedListener, int);
+    method @NonNull @RequiresPermission(android.Manifest.permission.MEDIA_CONTENT_CONTROL) public java.util.List<android.content.ComponentName> getLastMediaSources(int);
+    method @NonNull @RequiresPermission(android.Manifest.permission.MEDIA_CONTENT_CONTROL) public android.content.ComponentName getMediaSource(int);
+    method @RequiresPermission(android.Manifest.permission.MEDIA_CONTENT_CONTROL) public void removeMediaSourceListener(@NonNull android.car.media.CarMediaManager.MediaSourceChangedListener, int);
+    method @RequiresPermission(android.Manifest.permission.MEDIA_CONTENT_CONTROL) public void setMediaSource(@NonNull android.content.ComponentName, int);
+    field public static final int MEDIA_SOURCE_MODE_BROWSE = 1; // 0x1
+    field public static final int MEDIA_SOURCE_MODE_PLAYBACK = 0; // 0x0
+  }
+
+  public static interface CarMediaManager.MediaSourceChangedListener {
+    method public void onMediaSourceChanged(@NonNull android.content.ComponentName);
+  }
+
 }
 
 package android.car.navigation {
@@ -1223,10 +1239,11 @@ package android.car.user {
     method @RequiresPermission(anyOf={android.Manifest.permission.INTERACT_ACROSS_USERS, android.Manifest.permission.INTERACT_ACROSS_USERS_FULL}) public void addListener(@NonNull java.util.concurrent.Executor, @NonNull android.car.user.CarUserManager.UserLifecycleListener);
     method @RequiresPermission(anyOf={android.Manifest.permission.INTERACT_ACROSS_USERS, android.Manifest.permission.INTERACT_ACROSS_USERS_FULL}) public void removeListener(@NonNull android.car.user.CarUserManager.UserLifecycleListener);
     field public static final int USER_LIFECYCLE_EVENT_TYPE_STARTING = 1; // 0x1
-    field public static final int USER_LIFECYCLE_EVENT_TYPE_STOPPED = 5; // 0x5
-    field public static final int USER_LIFECYCLE_EVENT_TYPE_STOPPING = 4; // 0x4
+    field public static final int USER_LIFECYCLE_EVENT_TYPE_STOPPED = 6; // 0x6
+    field public static final int USER_LIFECYCLE_EVENT_TYPE_STOPPING = 5; // 0x5
     field public static final int USER_LIFECYCLE_EVENT_TYPE_SWITCHING = 2; // 0x2
-    field public static final int USER_LIFECYCLE_EVENT_TYPE_UNLOCKED = 3; // 0x3
+    field public static final int USER_LIFECYCLE_EVENT_TYPE_UNLOCKED = 4; // 0x4
+    field public static final int USER_LIFECYCLE_EVENT_TYPE_UNLOCKING = 3; // 0x3
   }
 
   public final class CarUserManager.UserLifecycleEvent {
