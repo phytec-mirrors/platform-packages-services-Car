@@ -49,14 +49,17 @@ import android.car.trust.CarTrustAgentEnrollmentManager;
 import android.car.vms.VmsSubscriberManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.TransactionTooLargeException;
 import android.os.UserHandle;
 import android.util.Log;
 
@@ -682,6 +685,8 @@ public final class Car {
 
     private final Context mContext;
 
+    private final Exception mConstructionStack;
+
     private final Object mLock = new Object();
 
     @GuardedBy("mLock")
@@ -771,7 +776,9 @@ public final class Car {
 
     /**
      * A factory method that creates Car instance for all Car API access.
-     * @param context
+     * @param context App's Context. This should not be null. If you are passing
+     *                {@link ContextWrapper}, make sure that its base Context is non-null as well.
+     *                Otherwise it will throw {@link java.lang.NullPointerException}.
      * @param serviceConnectionListener listener for monitoring service connection.
      * @param handler the handler on which the callback should execute, or null to execute on the
      * service's main thread. Note: the service connection listener will be always on the main
@@ -783,6 +790,7 @@ public final class Car {
     @Deprecated
     public static Car createCar(Context context, ServiceConnection serviceConnectionListener,
             @Nullable Handler handler) {
+        assertNonNullContext(context);
         if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)) {
             Log.e(TAG_CAR, "FEATURE_AUTOMOTIVE not declared while android.car is used");
             return null;
@@ -824,7 +832,9 @@ public final class Car {
     /**
      * Creates new {@link Car} object which connected synchronously to Car Service and ready to use.
      *
-     * @param context application's context
+     * @param context App's Context. This should not be null. If you are passing
+     *                {@link ContextWrapper}, make sure that its base Context is non-null as well.
+     *                Otherwise it will throw {@link java.lang.NullPointerException}.
      * @param handler the handler on which the manager's callbacks will be executed, or null to
      * execute on the application's main thread.
      *
@@ -832,6 +842,7 @@ public final class Car {
      */
     @Nullable
     public static Car createCar(Context context, @Nullable Handler handler) {
+        assertNonNullContext(context);
         Car car = null;
         IBinder service = null;
         boolean started = false;
@@ -845,6 +856,8 @@ public final class Car {
             }
             if (service != null) {
                 if (!started) {  // specialization for most common case.
+                    // Do this to crash client when car service crashes.
+                    car.startCarService();
                     return car;
                 }
                 break;
@@ -907,6 +920,9 @@ public final class Car {
      * {@link CarServiceLifecycleListener#onLifecycleChanged(Car, boolean)} and avoid the
      * needs to check if returned {@link Car} is connected or not from returned {@link Car}.</p>
      *
+     * @param context App's Context. This should not be null. If you are passing
+     *                {@link ContextWrapper}, make sure that its base Context is non-null as well.
+     *                Otherwise it will throw {@link java.lang.NullPointerException}.
      * @param handler dispatches all Car*Manager events to this Handler. Exception is
      *                {@link CarServiceLifecycleListener} which will be always dispatched to main
      *                thread. Passing null leads into dispatching all Car*Manager callbacks to main
@@ -923,7 +939,7 @@ public final class Car {
     public static Car createCar(@NonNull Context context,
             @Nullable Handler handler, long waitTimeoutMs,
             @NonNull CarServiceLifecycleListener statusChangeListener) {
-        Preconditions.checkNotNull(context);
+        assertNonNullContext(context);
         Preconditions.checkNotNull(statusChangeListener);
         Car car = null;
         IBinder service = null;
@@ -1004,6 +1020,15 @@ public final class Car {
         return car;
     }
 
+    private static void assertNonNullContext(Context context) {
+        Preconditions.checkNotNull(context);
+        if (context instanceof ContextWrapper
+                && ((ContextWrapper) context).getBaseContext() == null) {
+            throw new NullPointerException(
+                    "ContextWrapper with null base passed as Context, forgot to set base Context?");
+        }
+    }
+
     private void dispatchCarReadyToMainThread(boolean isMainThread) {
         if (isMainThread) {
             mStatusChangeCallback.onLifecycleChanged(this, true);
@@ -1030,6 +1055,13 @@ public final class Car {
         }
         mServiceConnectionListenerClient = serviceConnectionListener;
         mStatusChangeCallback = statusChangeListener;
+        // Store construction stack so that client can get help when it crashes when car service
+        // crashes.
+        if (serviceConnectionListener == null && statusChangeListener == null) {
+            mConstructionStack = new RuntimeException();
+        } else {
+            mConstructionStack = null;
+        }
     }
 
     /**
@@ -1195,7 +1227,12 @@ public final class Car {
 
     /** @hide */
     void handleRemoteExceptionFromCarService(RemoteException e) {
-        Log.w(TAG_CAR, "Car service has crashed", e);
+        if (e instanceof TransactionTooLargeException) {
+            Log.w(TAG_CAR, "Car service threw TransactionTooLargeException", e);
+            throw new CarTransactionException(e, "Car service threw TransactionTooLargException");
+        } else {
+            Log.w(TAG_CAR, "Car service has crashed", e);
+        }
     }
 
 
@@ -1206,16 +1243,27 @@ public final class Car {
         if (mContext instanceof Activity) {
             Activity activity = (Activity) mContext;
             if (!activity.isFinishing()) {
-                Log.w(TAG_CAR, "Car service crashed, client not handling it, finish Activity");
+                Log.w(TAG_CAR,
+                        "Car service crashed, client not handling it, finish Activity, created "
+                                + "from " + mConstructionStack);
                 activity.finish();
             }
             return;
         } else if (mContext instanceof Service) {
             Service service = (Service) mContext;
-            throw new RuntimeException("Car service has crashed, client not handle it:"
-                    + service.getPackageName() + "," + service.getClass().getSimpleName());
+            killClient(service.getPackageName() + "," + service.getClass().getSimpleName());
+        } else {
+            killClient(/* clientInfo= */ null);
         }
-        throw new IllegalStateException("Car service crashed, client not handling it.");
+    }
+
+    private void killClient(@Nullable String clientInfo) {
+        Log.w(TAG_CAR, "**Car service has crashed. Client(" + clientInfo + ") is not handling it."
+                        + " Client should use Car.createCar(..., CarServiceLifecycleListener, .."
+                        + ".) to handle it properly. Check pritned callstack to check where other "
+                        + "version of Car.createCar() was called. Killing the client process**",
+                mConstructionStack);
+        Process.killProcess(Process.myPid());
     }
 
     /** @hide */
@@ -1227,10 +1275,18 @@ public final class Car {
 
     /** @hide */
     public static  void handleRemoteExceptionFromCarService(Service service, RemoteException e) {
-        Log.w(TAG_CAR,
-                "Car service has crashed, client:" + service.getPackageName() + ","
-                        + service.getClass().getSimpleName(), e);
-        service.stopSelf();
+        if (e instanceof TransactionTooLargeException) {
+            Log.w(TAG_CAR, "Car service threw TransactionTooLargeException, client:"
+                    + service.getPackageName() + ","
+                    + service.getClass().getSimpleName(), e);
+            throw new CarTransactionException(e, "Car service threw TransactionTooLargeException, "
+                + "client: %s, %s", service.getPackageName(), service.getClass().getSimpleName());
+        } else {
+            Log.w(TAG_CAR, "Car service has crashed, client:"
+                    + service.getPackageName() + ","
+                    + service.getClass().getSimpleName(), e);
+            service.stopSelf();
+        }
     }
 
     @Nullable

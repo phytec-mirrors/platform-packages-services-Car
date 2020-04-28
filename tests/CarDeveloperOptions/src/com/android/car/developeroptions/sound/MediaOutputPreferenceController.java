@@ -86,7 +86,7 @@ public class MediaOutputPreferenceController extends AudioSwitchPreferenceContro
         mPreference.setVisible(deviceConnectable);
         mPreference.setSummary((activeDevice == null) ?
                 mContext.getText(R.string.media_output_default_summary) :
-                activeDevice.getAlias());
+                activeDevice.getAliasName());
     }
 
     @Override

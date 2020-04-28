@@ -12,19 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-filegroup {
-    name: "libcarpowermanager_aidl",
-    srcs: [
-        "src/android/car/ICar.aidl",
-        "src/android/car/hardware/power/ICarPower.aidl",
-        "src/android/car/hardware/power/ICarPowerStateListener.aidl",
-    ],
-    path: "src",
-}
-
 cc_library {
     name: "libcarpowermanager",
-    vendor_available: true,
 
     aidl: {
         export_aidl_headers: true,
@@ -51,7 +40,9 @@ cc_library {
     ],
 
     srcs: [
-        ":libcarpowermanager_aidl",
+        "src/android/car/ICar.aidl",
+        "src/android/car/hardware/power/ICarPower.aidl",
+        "src/android/car/hardware/power/ICarPowerStateListener.aidl",
         "native/CarPowerManager/CarPowerManager.cpp",
     ],
 }
@@ -63,6 +54,12 @@ java_library {
     },
     static_libs: ["libprotobuf-java-lite"],
     srcs: ["src/android/car/navigation/navigation_state.proto"]
+}
+
+// library to access settings from CarSettings
+java_library {
+    name: "android.car.settings",
+    srcs: ["src/android/car/settings/CarSettings.java"]
 }
 
 java_library {
@@ -140,15 +137,15 @@ droidstubs {
             api_file: ":android-car-last-released-api",
             removed_api_file: "api/removed.txt",
             args: " -hide 2 -hide 3 -hide 4 -hide 5 -hide 6 -hide 24 -hide 25 -hide 26 -hide 27 " +
-                " -warning 7 -warning 8 -warning 9 -warning 10 -warning 11 -warning 12 " +
-                " -warning 13 -warning 14 -warning 15 -warning 16 -warning 17 -warning 18 -hide 113 ",
+                  " -warning 7 -warning 8 -warning 9 -warning 10 -warning 11 -warning 12 " +
+                  " -warning 13 -warning 14 -warning 15 -warning 16 -warning 17 -warning 18 -hide 113 ",
         },
         current: {
             api_file: "api/current.txt",
             removed_api_file: "api/removed.txt",
             args: " -error 2 -error 3 -error 4 -error 5 -error 6 -error 7 -error 8 -error 9 -error 10 -error 11 " +
-                " -error 12 -error 13 -error 14 -error 15 -error 16 -error 17 -error 18 -error 19 -error 20 " +
-                " -error 21 -error 23 -error 24 -error 25 -hide 113 ",
+                  " -error 12 -error 13 -error 14 -error 15 -error 16 -error 17 -error 18 -error 19 -error 20 " +
+                  " -error 21 -error 23 -error 24 -error 25 -hide 113 ",
         },
     },
 }
@@ -167,15 +164,15 @@ droidstubs {
             api_file: ":android-car-last-released-system-api",
             removed_api_file: "api/system-removed.txt",
             args: " -hide 2 -hide 3 -hide 4 -hide 5 -hide 6 -hide 24 -hide 25 -hide 26 -hide 27 " +
-                " -warning 7 -warning 8 -warning 9 -warning 10 -warning 11 -warning 12 " +
-                " -warning 13 -warning 14 -warning 15 -warning 16 -warning 17 -warning 18 -hide 113 ",
+                  " -warning 7 -warning 8 -warning 9 -warning 10 -warning 11 -warning 12 " +
+                  " -warning 13 -warning 14 -warning 15 -warning 16 -warning 17 -warning 18 -hide 113 ",
         },
         current: {
             api_file: "api/system-current.txt",
             removed_api_file: "api/system-removed.txt",
             args: " -error 2 -error 3 -error 4 -error 5 -error 6 -error 7 -error 8 -error 9 -error 10 -error 11 " +
-                " -error 12 -error 13 -error 14 -error 15 -error 16 -error 17 -error 18 -error 19 -error 20 " +
-                " -error 21 -error 23 -error 24 -error 25 -hide 113 ",
+                  " -error 12 -error 13 -error 14 -error 15 -error 16 -error 17 -error 18 -error 19 -error 20 " +
+                  " -error 21 -error 23 -error 24 -error 25 -hide 113 ",
         },
     },
 }
@@ -219,14 +216,12 @@ droidstubs {
     },
 }
 
-java_library_static {
+java_library {
     name: "android.car-stubs",
     srcs: [
         ":android.car-stub-docs",
     ],
-    libs: [
-        "android.car",
-    ],
+    sdk_version: "current",
     product_variables: {
         pdk: {
             enabled: false,
@@ -238,14 +233,13 @@ java_library_static {
     }
 }
 
-java_library_static {
+java_library {
     name: "android.car-system-stubs",
     srcs: [
         ":android.car-system-stubs-docs",
+        "src_stub/**/*.java",
     ],
-    libs: [
-        "android.car",
-    ],
+    sdk_version: "system_current",
     product_variables: {
         pdk: {
             enabled: false,
@@ -257,40 +251,19 @@ java_library_static {
     }
 }
 
-java_library_static {
+java_library {
     name: "android.car-test-stubs",
     srcs: [
         ":android.car-test-stubs-docs",
     ],
-    libs: [
-        "android.car",
-    ],
+    sdk_version: "test_current",
     product_variables: {
         pdk: {
             enabled: false,
         },
     },
     compile_dex: true,
-}
-
-// Export the api/system-current.txt file.
-filegroup {
-    name: "car-api-system-current.txt",
-    visibility: [
-        "//cts/tests/signature/api",
-    ],
-    srcs: [
-        "api/system-current.txt",
-    ],
-}
-
-// Export the api/system-removed.txt file.
-filegroup {
-    name: "car-api-system-removed.txt",
-    visibility: [
-        "//cts/tests/signature/api",
-    ],
-    srcs: [
-        "api/system-removed.txt",
-    ],
+    dist: {
+        targets: ["dist_files"],
+    }
 }
