@@ -16,10 +16,7 @@
 
 package android.car.userlib;
 
-import static android.car.userlib.InitialUserSetterTest.setHeadlessSystemUserMode;
-
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -28,6 +25,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import android.app.ActivityManager;
+import android.car.test.mocks.AbstractExtendedMockitoTestCase;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.UserInfo;
@@ -41,12 +39,9 @@ import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.FlakyTest;
 import androidx.test.filters.SmallTest;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +57,7 @@ import java.util.Optional;
  * 3. {@link ActivityManager} to verify user switch is invoked.
  */
 @SmallTest
-public class CarUserManagerHelperTest {
+public class CarUserManagerHelperTest extends AbstractExtendedMockitoTestCase {
     @Mock private Context mContext;
     @Mock private UserManager mUserManager;
     @Mock private ActivityManager mActivityManager;
@@ -74,22 +69,21 @@ public class CarUserManagerHelperTest {
     private static final String TEST_USER_NAME = "testUser";
     private static final int NO_FLAGS = 0;
 
-    private MockitoSession mSession;
     private CarUserManagerHelper mCarUserManagerHelper;
     private UserInfo mSystemUser;
     private final int mForegroundUserId = 42;
 
+    @Override
+    protected void onSessionBuilder(CustomMockitoSessionBuilder session) {
+        session
+            .spyStatic(ActivityManager.class)
+            .spyStatic(CarProperties.class)
+            .spyStatic(UserManager.class)
+            .spyStatic(Settings.Global.class);
+    }
+
     @Before
     public void setUpMocksAndVariables() {
-        mSession = mockitoSession()
-                .strictness(Strictness.LENIENT)
-                .spyStatic(ActivityManager.class)
-                .spyStatic(CarProperties.class)
-                .spyStatic(Settings.Global.class)
-                .spyStatic(UserManager.class)
-                .initMocks(this)
-                .startMocking();
-
         doReturn(mUserManager).when(mContext).getSystemService(Context.USER_SERVICE);
         doReturn(mActivityManager).when(mContext).getSystemService(Context.ACTIVITY_SERVICE);
         doReturn(mResources).when(mContext).getResources();
@@ -99,12 +93,7 @@ public class CarUserManagerHelperTest {
 
         mSystemUser = createUserInfoForId(UserHandle.USER_SYSTEM);
 
-        doReturn(mForegroundUserId).when(() -> ActivityManager.getCurrentUser());
-    }
-
-    @After
-    public void finishSession() throws Exception {
-        mSession.finishMocking();
+        mockGetCurrentUser(mForegroundUserId);
     }
 
     @Test
@@ -302,7 +291,7 @@ public class CarUserManagerHelperTest {
 
     @Test
     public void testHasInitialUser_onlyHeadlessSystemUser() {
-        setHeadlessSystemUserMode(true);
+        mockIsHeadlessSystemUserMode(true);
         mockGetUsers(mSystemUser);
 
         assertThat(mCarUserManagerHelper.hasInitialUser()).isFalse();
@@ -310,7 +299,7 @@ public class CarUserManagerHelperTest {
 
     @Test
     public void testHasInitialUser_onlyNonHeadlessSystemUser() {
-        setHeadlessSystemUserMode(false);
+        mockIsHeadlessSystemUserMode(false);
         mockGetUsers(mSystemUser);
 
         assertThat(mCarUserManagerHelper.hasInitialUser()).isTrue();
@@ -318,7 +307,7 @@ public class CarUserManagerHelperTest {
 
     @Test
     public void testHasInitialUser_hasNormalUser() {
-        setHeadlessSystemUserMode(true);
+        mockIsHeadlessSystemUserMode(true);
         UserInfo normalUser = createUserInfoForId(10);
         mockGetUsers(mSystemUser, normalUser);
 
@@ -327,7 +316,7 @@ public class CarUserManagerHelperTest {
 
     @Test
     public void testHasInitialUser_hasOnlyWorkProfile() {
-        setHeadlessSystemUserMode(true);
+        mockIsHeadlessSystemUserMode(true);
         UserInfo workProfile = createUserInfoForId(10);
         workProfile.userType = UserManager.USER_TYPE_PROFILE_MANAGED;
         assertThat(workProfile.isManagedProfile()).isTrue(); // Sanity check

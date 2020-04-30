@@ -16,37 +16,19 @@
 
 package android.car.userlib;
 
-import static android.car.userlib.InitialUserSetterTest.setHeadlessSystemUserMode;
-
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
-
 import static com.google.common.truth.Truth.assertThat;
 
+import android.car.test.mocks.AbstractExtendedMockitoTestCase;
 import android.os.UserHandle;
 import android.os.UserManager;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
-public final class UserHelperTest {
+public final class UserHelperTest extends AbstractExtendedMockitoTestCase {
 
-    private MockitoSession mSession;
-
-    @Before
-    public void setSession() {
-        mSession = mockitoSession()
-                .strictness(Strictness.LENIENT)
-                .spyStatic(UserManager.class)
-                .initMocks(this)
-                .startMocking();
-    }
-
-    @After
-    public void finishSession() throws Exception {
-        mSession.finishMocking();
+    @Override
+    protected void onSessionBuilder(CustomMockitoSessionBuilder session) {
+        session.spyStatic(UserManager.class);
     }
 
     @Test
@@ -60,25 +42,25 @@ public final class UserHelperTest {
 
     @Test
     public void testIsHeadlessSystemUser_system_headlessMode() {
-        setHeadlessSystemUserMode(true);
+        mockIsHeadlessSystemUserMode(true);
         assertThat(UserHelper.isHeadlessSystemUser(UserHandle.USER_SYSTEM)).isTrue();
     }
 
     @Test
     public void testIsHeadlessSystemUser_system_nonHeadlessMode() {
-        setHeadlessSystemUserMode(false);
+        mockIsHeadlessSystemUserMode(false);
         assertThat(UserHelper.isHeadlessSystemUser(UserHandle.USER_SYSTEM)).isFalse();
     }
 
     @Test
     public void testIsHeadlessSystemUser_nonSystem_headlessMode() {
-        setHeadlessSystemUserMode(true);
+        mockIsHeadlessSystemUserMode(true);
         assertThat(UserHelper.isHeadlessSystemUser(10)).isFalse();
     }
 
     @Test
     public void testIsHeadlessSystemUser_nonSystem_nonHeadlessMode() {
-        setHeadlessSystemUserMode(false);
+        mockIsHeadlessSystemUserMode(false);
         assertThat(UserHelper.isHeadlessSystemUser(10)).isFalse();
     }
 }
