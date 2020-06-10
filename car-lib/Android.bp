@@ -65,6 +65,12 @@ java_library {
     srcs: ["src/android/car/navigation/navigation_state.proto"]
 }
 
+// library to access settings from CarSettings
+java_library {
+    name: "android.car.settings",
+    srcs: ["src/android/car/settings/CarSettings.java"]
+}
+
 java_library {
     name: "android.car",
     srcs: [
@@ -130,9 +136,6 @@ genrule {
 droidstubs {
     name: "android.car-stubs-docs",
     defaults: ["android.car-docs-default"],
-    api_tag_name: "ANDROID_CAR",
-    api_filename: "api.txt",
-    removed_api_filename: "removed.txt",
     args: "--hide UnavailableSymbol --no-docs --stub-packages android.car* ",
     installable: false,
     check_api: {
@@ -156,9 +159,6 @@ droidstubs {
 droidstubs {
     name: "android.car-system-stubs-docs",
     defaults: ["android.car-docs-default"],
-    api_tag_name: "ANDROID_CAR_SYSTEM",
-    api_filename: "api.txt",
-    removed_api_filename: "removed.txt",
     args: "--hide UnavailableSymbol --no-docs --stub-packages android.car* " +
         "--show-annotation android.annotation.SystemApi ",
     installable: false,
@@ -183,9 +183,6 @@ droidstubs {
 droidstubs {
     name: "android.car-test-stubs-docs",
     defaults: ["android.car-docs-default"],
-    api_tag_name: "ANDROID_CAR_SYSTEM",
-    api_filename: "api.txt",
-    removed_api_filename: "removed.txt",
     args: "--hide UnavailableSymbol --no-docs --stub-packages android.car* " +
         "--show-annotation android.annotation.TestApi ",
     installable: false,
@@ -208,7 +205,6 @@ droidstubs {
     libs: [
         "android.car",
     ],
-    api_tag_name: "ANDROID_CAR_STUB",
     api_filename: "api.txt",
     args: "--hide UnavailableSymbol --no-docs --stub-packages android.car* ",
     installable: false,
@@ -219,14 +215,12 @@ droidstubs {
     },
 }
 
-java_library_static {
+java_library {
     name: "android.car-stubs",
     srcs: [
         ":android.car-stub-docs",
     ],
-    libs: [
-        "android.car",
-    ],
+    sdk_version: "current",
     product_variables: {
         pdk: {
             enabled: false,
@@ -238,14 +232,13 @@ java_library_static {
     }
 }
 
-java_library_static {
+java_library {
     name: "android.car-system-stubs",
     srcs: [
         ":android.car-system-stubs-docs",
+        "src_stub/**/*.java",
     ],
-    libs: [
-        "android.car",
-    ],
+    sdk_version: "system_current",
     product_variables: {
         pdk: {
             enabled: false,
@@ -257,20 +250,21 @@ java_library_static {
     }
 }
 
-java_library_static {
+java_library {
     name: "android.car-test-stubs",
     srcs: [
         ":android.car-test-stubs-docs",
     ],
-    libs: [
-        "android.car",
-    ],
+    sdk_version: "test_current",
     product_variables: {
         pdk: {
             enabled: false,
         },
     },
     compile_dex: true,
+    dist: {
+        targets: ["dist_files"],
+    }
 }
 
 // Export the api/system-current.txt file.
