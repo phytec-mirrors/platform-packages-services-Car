@@ -17,8 +17,8 @@ import androidx.preference.PreferenceCategory;
 import com.android.car.developeroptions.R;
 import com.android.car.developeroptions.SettingsPreferenceFragment;
 import com.android.car.developeroptions.search.BaseSearchIndexProvider;
-import com.android.car.developeroptions.search.Indexable;
 import com.android.car.developeroptions.tts.TtsEnginePreference.RadioButtonGroupState;
+import com.android.settingslib.search.Indexable;
 import com.android.settingslib.search.SearchIndexable;
 
 import java.util.Arrays;
@@ -110,7 +110,7 @@ public class TtsEnginePreferenceFragment extends SettingsPreferenceFragment
     }
 
     /**
-     * The initialization listener used when the user changes his choice of engine (as opposed to
+     * The initialization listener used when the user changes their choice of engine (as opposed to
      * when then screen is being initialized for the first time).
      */
     private final TextToSpeech.OnInitListener mUpdateListener =

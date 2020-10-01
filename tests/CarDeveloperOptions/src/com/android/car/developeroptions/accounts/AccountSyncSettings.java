@@ -48,6 +48,7 @@ import androidx.preference.Preference;
 import com.android.car.developeroptions.R;
 import com.android.car.developeroptions.Utils;
 import com.android.car.developeroptions.widget.EntityHeaderController;
+import com.android.settingslib.widget.FooterPreference;
 
 import com.google.android.collect.Lists;
 
@@ -280,7 +281,7 @@ public class AccountSyncSettings extends AccountPreferenceBase {
                     }
                     // if we're enabling sync, this will request a sync as well
                     ContentResolver.setSyncAutomaticallyAsUser(account, authority, syncOn, userId);
-                    // if the master sync switch is off, the request above will
+                    // if the global sync switch is off, the request above will
                     // get dropped.  when the user clicks on this toggle,
                     // we want to force the sync, however.
                     if (!ContentResolver.getMasterSyncAutomaticallyAsUser(userId) || !syncOn) {
@@ -458,8 +459,8 @@ public class AccountSyncSettings extends AccountPreferenceBase {
             syncPref.setChecked(oneTimeSyncMode || syncEnabled);
         }
         if (syncIsFailing) {
-            mFooterPreferenceMixin.createFooterPreference()
-                    .setTitle(R.string.sync_is_failing);
+            getPreferenceScreen().addPreference(new FooterPreference.Builder(
+                    getActivity()).setTitle(R.string.sync_is_failing).build());
         }
     }
 

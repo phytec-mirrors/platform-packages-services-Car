@@ -726,7 +726,7 @@ public class CryptKeeper extends Activity implements TextView.OnEditorActionList
         public void onPatternDetected(List<LockPatternView.Cell> pattern) {
             mLockPatternView.setEnabled(false);
             if (pattern.size() >= MIN_LENGTH_BEFORE_REPORT) {
-                new DecryptTask().execute(LockPatternUtils.patternToString(pattern));
+                new DecryptTask().execute(new String(LockPatternUtils.patternToByteArray(pattern)));
             } else {
                 // Allow user to make as many of these as they want.
                 fakeUnlockAttempt(mLockPatternView);
@@ -804,7 +804,7 @@ public class CryptKeeper extends Activity implements TextView.OnEditorActionList
         }
 
         updateEmergencyCallButtonState();
-        // Notify the user in 120 seconds that we are waiting for him to enter the password.
+        // Notify the user in 120 seconds that we are waiting for them to enter the password.
         mHandler.removeMessages(MESSAGE_NOTIFY);
         mHandler.sendEmptyMessageDelayed(MESSAGE_NOTIFY, 120 * 1000);
 

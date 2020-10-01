@@ -27,7 +27,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 
 /**
- * Parcelable to hold information on app blocking whitelist or blacklist for a package.
+ * Parcelable to hold information on app blocking allowlist or denylist for a package.
  * @hide
  */
 @SystemApi
@@ -38,7 +38,7 @@ public final class AppBlockingPackageInfo implements Parcelable {
 
     /** Represents system app which does not need {@link #signature}. */
     public static final int FLAG_SYSTEM_APP = 0x1;
-    /** Blacklist or whitelist every Activities in the package. When this is set,
+    /** Denylist or allowlist every Activities in the package. When this is set,
      *  {@link #activities} may be null. */
     public static final int FLAG_WHOLE_ACTIVITY = 0x2;
     /** @hide */
@@ -99,7 +99,7 @@ public final class AppBlockingPackageInfo implements Parcelable {
     public AppBlockingPackageInfo(Parcel in) {
         packageName = in.readString();
         flags = in.readInt();
-        minRevisionCode= in.readInt();
+        minRevisionCode = in.readInt();
         maxRevisionCode = in.readInt();
         signatures = in.createTypedArray(Signature.CREATOR);
         activities = in.createStringArray();
@@ -121,15 +121,18 @@ public final class AppBlockingPackageInfo implements Parcelable {
         dest.writeStringArray(activities);
     }
 
-    public static final Parcelable.Creator<AppBlockingPackageInfo> CREATOR
-            = new Parcelable.Creator<AppBlockingPackageInfo>() {
-        public AppBlockingPackageInfo createFromParcel(Parcel in) {
-            return new AppBlockingPackageInfo(in);
-        }
+    public static final Parcelable.Creator<AppBlockingPackageInfo> CREATOR =
+            new Parcelable.Creator<AppBlockingPackageInfo>() {
 
-        public AppBlockingPackageInfo[] newArray(int size) {
-            return new AppBlockingPackageInfo[size];
-        }
+                @Override
+                public AppBlockingPackageInfo createFromParcel(Parcel in) {
+                    return new AppBlockingPackageInfo(in);
+                }
+
+                @Override
+                public AppBlockingPackageInfo[] newArray(int size) {
+                    return new AppBlockingPackageInfo[size];
+                }
     };
 
     /** @hide */
@@ -194,10 +197,12 @@ public final class AppBlockingPackageInfo implements Parcelable {
             return false;
         }
         if (packageName == null) {
-            if (other.packageName != null)
+            if (other.packageName != null) {
                 return false;
-        } else if (!packageName.equals(other.packageName))
+            }
+        } else if (!packageName.equals(other.packageName)) {
             return false;
+        }
         if (!Arrays.equals(signatures, other.signatures)) {
             return false;
         }
