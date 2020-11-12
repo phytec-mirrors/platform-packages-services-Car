@@ -180,13 +180,10 @@ bool VirtualCamera::notify(const EvsEventDesc& event) {
                 // Warn if we got an unexpected stream termination
                 LOG(WARNING) << "Stream unexpectedly stopped, current status "
                              << mStreamState;
-
-                // Clean up the resource and forward an event to the client
-                stopVideoStream();
-
-                // This event is handled properly.
-                return true;
             }
+
+            // Mark the stream as stopped.
+            mStreamState = STOPPED;
 
             if (mStream_1_1 == nullptr) {
                 // Send a null frame instead, for v1.0 client
