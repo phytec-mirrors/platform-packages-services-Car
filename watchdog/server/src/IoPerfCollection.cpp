@@ -414,13 +414,9 @@ Result<void> IoPerfCollection::onBootFinished() {
     return {};
 }
 
-Result<void> IoPerfCollection::dump(int fd, const Vector<String16>& args) {
+Result<void> IoPerfCollection::onCustomCollection(int fd, const Vector<String16>& args) {
     if (args.empty()) {
-        const auto& ret = dumpCollection(fd);
-        if (!ret) {
-            return ret;
-        }
-        return {};
+        return Error(BAD_VALUE) << "No I/O perf collection dump arguments";
     }
 
     if (args[0] == String16(kStartCustomCollectionFlag)) {
@@ -434,7 +430,7 @@ Result<void> IoPerfCollection::dump(int fd, const Vector<String16>& args) {
         for (size_t i = 1; i < args.size(); ++i) {
             if (args[i] == String16(kIntervalFlag)) {
                 const auto& ret = parseSecondsFlag(args, i + 1);
-                if (!ret) {
+                if (!ret.ok()) {
                     return Error(BAD_VALUE)
                             << "Failed to parse " << kIntervalFlag << ": " << ret.error();
                 }
@@ -444,7 +440,7 @@ Result<void> IoPerfCollection::dump(int fd, const Vector<String16>& args) {
             }
             if (args[i] == String16(kMaxDurationFlag)) {
                 const auto& ret = parseSecondsFlag(args, i + 1);
-                if (!ret) {
+                if (!ret.ok()) {
                     return Error(BAD_VALUE)
                             << "Failed to parse " << kMaxDurationFlag << ": " << ret.error();
                 }
@@ -471,7 +467,7 @@ Result<void> IoPerfCollection::dump(int fd, const Vector<String16>& args) {
                                     << "collection";
         }
         const auto& ret = startCustomCollection(interval, maxDuration, filterPackages);
-        if (!ret) {
+        if (!ret.ok()) {
             WriteStringToFd(ret.error().message(), fd);
             return ret;
         }
@@ -494,26 +490,7 @@ Result<void> IoPerfCollection::dump(int fd, const Vector<String16>& args) {
                             << kEndCustomCollectionFlag << " flags";
 }
 
-bool IoPerfCollection::dumpHelpText(int fd) {
-    long periodicCacheMinutes =
-            (std::chrono::duration_cast<std::chrono::seconds>(mPeriodicCollection.interval)
-                     .count() *
-             mPeriodicCollection.maxCacheSize) /
-            60;
-    return WriteStringToFd(StringPrintf(kHelpText, kStartCustomCollectionFlag, kIntervalFlag,
-                                        std::chrono::duration_cast<std::chrono::seconds>(
-                                                kCustomCollectionInterval)
-                                                .count(),
-                                        kMaxDurationFlag,
-                                        std::chrono::duration_cast<std::chrono::minutes>(
-                                                kCustomCollectionDuration)
-                                                .count(),
-                                        kFilterPackagesFlag, mTopNStatsPerCategory,
-                                        kEndCustomCollectionFlag, periodicCacheMinutes),
-                           fd);
-}
-
-Result<void> IoPerfCollection::dumpCollection(int fd) {
+Result<void> IoPerfCollection::onDump(int fd) {
     Mutex::Autolock lock(mMutex);
     if (mCurrCollectionEvent == CollectionEvent::TERMINATED) {
         ALOGW("I/O performance data collection not active. Dumping cached data");
@@ -524,7 +501,7 @@ Result<void> IoPerfCollection::dumpCollection(int fd) {
     }
 
     const auto& ret = dumpCollectorsStatusLocked(fd);
-    if (!ret) {
+    if (!ret.ok()) {
         return Error(FAILED_TRANSACTION) << ret.error();
     }
 
@@ -543,6 +520,25 @@ Result<void> IoPerfCollection::dumpCollection(int fd) {
                 << "Failed to dump the boot-time and periodic collection reports.";
     }
     return {};
+}
+
+bool IoPerfCollection::dumpHelpText(int fd) {
+    long periodicCacheMinutes =
+            (std::chrono::duration_cast<std::chrono::seconds>(mPeriodicCollection.interval)
+                     .count() *
+             mPeriodicCollection.maxCacheSize) /
+            60;
+    return WriteStringToFd(StringPrintf(kHelpText, kStartCustomCollectionFlag, kIntervalFlag,
+                                        std::chrono::duration_cast<std::chrono::seconds>(
+                                                kCustomCollectionInterval)
+                                                .count(),
+                                        kMaxDurationFlag,
+                                        std::chrono::duration_cast<std::chrono::minutes>(
+                                                kCustomCollectionDuration)
+                                                .count(),
+                                        kFilterPackagesFlag, mTopNStatsPerCategory,
+                                        kEndCustomCollectionFlag, periodicCacheMinutes),
+                           fd);
 }
 
 Result<void> IoPerfCollection::dumpCollectorsStatusLocked(int fd) {
@@ -611,7 +607,7 @@ Result<void> IoPerfCollection::endCustomCollection(int fd) {
     mHandlerLooper->sendMessage(this, SwitchEvent::END_CUSTOM_COLLECTION);
 
     const auto& ret = dumpCollectorsStatusLocked(fd);
-    if (!ret) {
+    if (!ret.ok()) {
         return Error(FAILED_TRANSACTION) << ret.error();
     }
 
@@ -702,7 +698,7 @@ Result<void> IoPerfCollection::processCollectionEvent(CollectionEvent event, Col
                 << " seconds";
     }
     auto ret = collectLocked(info);
-    if (!ret) {
+    if (!ret.ok()) {
         return Error() << toString(event) << " collection failed: " << ret.error();
     }
     info->lastCollectionUptime += info->interval.count();
@@ -718,15 +714,15 @@ Result<void> IoPerfCollection::collectLocked(CollectionInfo* collectionInfo) {
             .time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()),
     };
     auto ret = collectSystemIoPerfDataLocked(&record.systemIoPerfData);
-    if (!ret) {
+    if (!ret.ok()) {
         return ret;
     }
     ret = collectProcessIoPerfDataLocked(*collectionInfo, &record.processIoPerfData);
-    if (!ret) {
+    if (!ret.ok()) {
         return ret;
     }
     ret = collectUidIoPerfDataLocked(*collectionInfo, &record.uidIoPerfData);
-    if (!ret) {
+    if (!ret.ok()) {
         return ret;
     }
     if (collectionInfo->records.size() > collectionInfo->maxCacheSize) {
@@ -745,7 +741,7 @@ Result<void> IoPerfCollection::collectUidIoPerfDataLocked(const CollectionInfo& 
     }
 
     const Result<std::unordered_map<uint32_t, UidIoUsage>>& usage = mUidIoStats->collect();
-    if (!usage) {
+    if (!usage.ok()) {
         return Error() << "Failed to collect uid I/O usage: " << usage.error();
     }
 
@@ -799,7 +795,7 @@ Result<void> IoPerfCollection::collectUidIoPerfDataLocked(const CollectionInfo& 
     }
 
     const auto& ret = updateUidToPackageNameMapping(unmappedUids);
-    if (!ret) {
+    if (!ret.ok()) {
         ALOGW("%s", ret.error().message().c_str());
     }
 
@@ -864,7 +860,7 @@ Result<void> IoPerfCollection::collectSystemIoPerfDataLocked(SystemIoPerfData* s
     }
 
     const Result<ProcStatInfo>& procStatInfo = mProcStat->collect();
-    if (!procStatInfo) {
+    if (!procStatInfo.ok()) {
         return Error() << "Failed to collect proc stats: " << procStatInfo.error();
     }
 
@@ -884,7 +880,7 @@ Result<void> IoPerfCollection::collectProcessIoPerfDataLocked(
     }
 
     const Result<std::vector<ProcessStats>>& processStats = mProcPidStat->collect();
-    if (!processStats) {
+    if (!processStats.ok()) {
         return Error() << "Failed to collect process stats: " << processStats.error();
     }
 
@@ -924,7 +920,7 @@ Result<void> IoPerfCollection::collectProcessIoPerfDataLocked(
     }
 
     const auto& ret = updateUidToPackageNameMapping(unmappedUids);
-    if (!ret) {
+    if (!ret.ok()) {
         ALOGW("%s", ret.error().message().c_str());
     }
 
@@ -1020,7 +1016,7 @@ Result<void> IoPerfCollection::updateUidToPackageNameMapping(
 
     if (mPackageManager == nullptr) {
         auto ret = retrievePackageManager();
-        if (!ret) {
+        if (!ret.ok()) {
             return Error() << "Failed to retrieve package manager: " << ret.error();
         }
     }

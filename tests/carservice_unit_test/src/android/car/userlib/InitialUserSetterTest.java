@@ -291,7 +291,7 @@ public final class InitialUserSetterTest extends AbstractExtendedMockitoTestCase
     public void testReplaceGuestIfNeeded_nonGuest() {
         UserInfo user = newSecondaryUser(USER_ID);
 
-        assertThat(mSetter.replaceGuestIfNeeded(user)).isSameAs(user);
+        assertThat(mSetter.replaceGuestIfNeeded(user)).isSameInstanceAs(user);
 
         verifyGuestNeverMarkedForDeletion();
         verifyUserNeverCreated();
@@ -302,7 +302,7 @@ public final class InitialUserSetterTest extends AbstractExtendedMockitoTestCase
         UserInfo newGuest = expectCreateGuestUser(NEW_USER_ID, GUEST_NAME, NO_FLAGS);
         UserInfo user = newGuestUser(USER_ID, /* ephemeral= */ false);
 
-        assertThat(mSetter.replaceGuestIfNeeded(user)).isSameAs(newGuest);
+        assertThat(mSetter.replaceGuestIfNeeded(user)).isSameInstanceAs(newGuest);
 
         verifyGuestMarkedForDeletion(USER_ID);
     }
@@ -311,7 +311,7 @@ public final class InitialUserSetterTest extends AbstractExtendedMockitoTestCase
     public void testReplaceGuestIfNeeded_lockScreen() throws Exception {
         UserInfo user = newGuestUser(USER_ID, /* ephemeral= */ false);
         expectUserIsSecure(USER_ID);
-        assertThat(mSetter.replaceGuestIfNeeded(user)).isSameAs(user);
+        assertThat(mSetter.replaceGuestIfNeeded(user)).isSameInstanceAs(user);
 
         verifyGuestNeverMarkedForDeletion();
         verifyUserNeverCreated();
@@ -322,7 +322,7 @@ public final class InitialUserSetterTest extends AbstractExtendedMockitoTestCase
         UserInfo newGuest = expectCreateGuestUser(NEW_USER_ID, GUEST_NAME, UserInfo.FLAG_EPHEMERAL);
         UserInfo user = newGuestUser(USER_ID, /* ephemeral= */ true);
 
-        assertThat(mSetter.replaceGuestIfNeeded(user)).isSameAs(newGuest);
+        assertThat(mSetter.replaceGuestIfNeeded(user)).isSameInstanceAs(newGuest);
 
         verifyGuestMarkedForDeletion(USER_ID);
     }
@@ -335,6 +335,28 @@ public final class InitialUserSetterTest extends AbstractExtendedMockitoTestCase
         assertThat(mSetter.replaceGuestIfNeeded(user)).isEqualTo(null);
 
         verifyGuestMarkedForDeletion(USER_ID);
+    }
+
+    @Test
+    public void testCanReplaceGuestUser_NotGuest() {
+        UserInfo user = expectUserExists(USER_ID);
+
+        assertThat(mSetter.canReplaceGuestUser(user)).isFalse();
+    }
+
+    @Test
+    public void testCanReplaceGuestUser_Guest() {
+        UserInfo user = expectGuestExists(USER_ID, /* isEphemeral */true);
+
+        assertThat(mSetter.canReplaceGuestUser(user)).isTrue();
+    }
+
+    @Test
+    public void testCanReplaceGuestUser_GuestLocked() {
+        UserInfo user = expectGuestExists(USER_ID, /* isEphemeral */true);
+        expectUserIsSecure(USER_ID);
+
+        assertThat(mSetter.canReplaceGuestUser(user)).isFalse();
     }
 
     @Test
@@ -483,6 +505,51 @@ public final class InitialUserSetterTest extends AbstractExtendedMockitoTestCase
         verifyFallbackDefaultBehaviorCalledFromCreateOrSwitch();
         verifySystemUserUnlocked();
         verifyLastActiveUserNeverSet();
+    }
+
+    @Test
+    public void testReplaceUser_ok() throws Exception {
+        mockGetCurrentUser(CURRENT_USER_ID);
+        expectGuestExists(CURRENT_USER_ID, /* ephemeral */ true); // ephemeral doesn't matter
+        UserInfo newGuest = expectGuestExists(NEW_USER_ID, /* ephemeral */ true);
+        expectGuestReplaced(CURRENT_USER_ID, newGuest);
+        expectSwitchUser(NEW_USER_ID);
+
+        mSetter.set(new Builder(InitialUserSetter.TYPE_REPLACE_GUEST)
+                .build());
+
+        verifyUserSwitched(NEW_USER_ID);
+        verifyFallbackDefaultBehaviorNeverCalled();
+        verifySystemUserUnlocked();
+        verifyUserDeleted(CURRENT_USER_ID);
+        assertInitialUserSet(newGuest);
+    }
+
+    @Test
+    public void testReplaceUser_fail_cantCreate() throws Exception {
+        mockGetCurrentUser(CURRENT_USER_ID);
+        expectGuestExists(CURRENT_USER_ID, /* ephemeral */ true); // ephemeral doesn't matter
+        expectGuestReplaced(CURRENT_USER_ID, null);
+
+        mSetter.set(new Builder(InitialUserSetter.TYPE_REPLACE_GUEST)
+                .build());
+
+        verifyFallbackDefaultBehaviorCalledFromReaplceUser();
+    }
+
+    @Test
+    public void testReplaceUser_ok_sameUser() throws Exception {
+        mockGetCurrentUser(CURRENT_USER_ID);
+        UserInfo userInfo = expectGuestExists(CURRENT_USER_ID, /* ephemeral */ true);
+        expectGuestReplaced(CURRENT_USER_ID, userInfo);
+
+        mSetter.set(new Builder(InitialUserSetter.TYPE_REPLACE_GUEST)
+                .build());
+
+        verifyUserNeverSwitched();
+        verifyFallbackDefaultBehaviorNeverCalled();
+        verifySystemUserUnlocked();
+        assertInitialUserSet(userInfo);
     }
 
     @Test
@@ -858,6 +925,11 @@ public final class InitialUserSetterTest extends AbstractExtendedMockitoTestCase
         assertInitialUserSet(null);
     }
 
+    private void verifyFallbackDefaultBehaviorCalledFromReaplceUser() {
+        verify(mSetter).fallbackDefaultBehavior(isInitialInfo(false), eq(true), anyString());
+        assertInitialUserSet(null);
+    }
+
     private void verifyFallbackDefaultBehaviorNeverCalled() {
         verifyFallbackDefaultBehaviorNeverCalled(/* supportsOverrideUserIdProperty= */ false);
     }
@@ -889,7 +961,7 @@ public final class InitialUserSetterTest extends AbstractExtendedMockitoTestCase
         assertWithMessage("listener called wrong number of times").that(mListener.numberCalls)
             .isEqualTo(1);
         assertWithMessage("wrong initial user set on listener").that(mListener.initialUser)
-            .isSameAs(expectedUser);
+            .isSameInstanceAs(expectedUser);
     }
 
     private void assertSystemLocales(@NonNull String expected) {

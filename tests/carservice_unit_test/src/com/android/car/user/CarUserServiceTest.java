@@ -710,14 +710,22 @@ public final class CarUserServiceTest extends AbstractExtendedMockitoTestCase {
     }
 
     @Test
-    public void testRemoveUser_lastAdminUser() throws Exception {
-        mockCurrentUser(mRegularUser);
-        mockExistingUsers(mExistingUsers);
+    public void testRemoveUser_LastAdminUser_success() throws Exception {
+        List<UserInfo> existingUsers =
+                new ArrayList<UserInfo>(Arrays.asList(mAdminUser, mGuestUser, mRegularUser));
+        UserInfo currentUser = mRegularUser;
+        mockExistingUsersAndCurrentUser(existingUsers, currentUser);
+        UserInfo removeUser = mAdminUser;
+        doAnswer((invocation) -> {
+            existingUsers.remove(removeUser);
+            return true;
+        }).when(mMockedUserManager).removeUser(eq(removeUser.id));
 
         UserRemovalResult result = mCarUserService.removeUser(mAdminUser.id);
 
         assertThat(result.getStatus())
-                .isEqualTo(UserRemovalResult.STATUS_TARGET_USER_IS_LAST_ADMIN_USER);
+                .isEqualTo(UserRemovalResult.STATUS_SUCCESSFUL_LAST_ADMIN_REMOVED);
+        assertHalRemove(currentUser, removeUser, existingUsers);
     }
 
     @Test
@@ -1521,7 +1529,7 @@ public final class CarUserServiceTest extends AbstractExtendedMockitoTestCase {
         assertThat(mCarUserService.getInitialUser()).isNull();
         UserInfo user = new UserInfo();
         mCarUserService.setInitialUser(user);
-        assertThat(mCarUserService.getInitialUser()).isSameAs(user);
+        assertThat(mCarUserService.getInitialUser()).isSameInstanceAs(user);
     }
 
     @Test
@@ -1593,7 +1601,7 @@ public final class CarUserServiceTest extends AbstractExtendedMockitoTestCase {
                 .getUserIdentificationAssociation(types);
 
         assertThat(response.isSuccess()).isTrue();
-        assertThat(response.getValues()).asList().containsAllOf(10, 20, 30).inOrder();
+        assertThat(response.getValues()).asList().containsAtLeast(10, 20, 30).inOrder();
         assertThat(response.getErrorMessage()).isEqualTo("D'OH!");
     }
 
@@ -1711,7 +1719,7 @@ public final class CarUserServiceTest extends AbstractExtendedMockitoTestCase {
         UserIdentificationAssociationResponse response = getUserAssociationRespResult();
 
         assertThat(response.isSuccess()).isTrue();
-        assertThat(response.getValues()).asList().containsAllOf(10, 20, 30).inOrder();
+        assertThat(response.getValues()).asList().containsAtLeast(10, 20, 30).inOrder();
         assertThat(response.getErrorMessage()).isEqualTo("D'OH!");
     }
 
