@@ -44,6 +44,7 @@ PRODUCT_PACKAGES += \
     ExperimentalCarService \
     RotaryPlayground \
     BugReportApp \
+    NetworkPreferenceApp \
 
 # SEPolicy for test apps / services
 BOARD_SEPOLICY_DIRS += packages/services/Car/car_product/sepolicy/test
@@ -85,6 +86,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PACKAGES += \
     CarFrameworkPackageStubs \
     CarService \
+    CarShell \
     CarDialerApp \
     CarRadioApp \
     OverviewApp \

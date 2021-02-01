@@ -107,9 +107,15 @@ Result<void> StatsCollector::handleCollectionEvent(CollectionEvent event,
                                                    CollectionInfo* info) {
     AutoMutex lock(mMutex);
     if (mCurrentCollectionEvent != event) {
-        LOG(WARNING) << "Skipping " << toString(event) << " collection event "
-                     << "on collection event " << toString(mCurrentCollectionEvent);
-        return {};
+        if (mCurrentCollectionEvent != CollectionEvent::TERMINATED) {
+            LOG(WARNING) << "Skipping " << toString(event) << " collection event "
+                         << "on collection event " << toString(mCurrentCollectionEvent);
+
+            return {};
+        } else {
+            return Error() << "A collection has been terminated "
+                           << "while a current event was pending in the message queue.";
+        }
     }
 
     if (info->maxCacheSize < 1) {
@@ -129,7 +135,7 @@ Result<void> StatsCollector::handleCollectionEvent(CollectionEvent event,
     }
 
     auto ret = collectLocked(info);
-    if (!ret) {
+    if (!ret.ok()) {
         return Error() << toString(event) << " collection failed: "
                        << ret.error();
     }
@@ -318,7 +324,7 @@ Result<std::string> StatsCollector::stopCustomCollection(std::string targetId) {
     }
 
     auto ret = collectLocked(&mCustomCollectionInfo);
-    if (!ret) {
+    if (!ret.ok()) {
         return Error() << toString(mCurrentCollectionEvent) << " collection failed: "
                        << ret.error();
     }

@@ -61,6 +61,12 @@ using ::android::base::WriteStringToFd;
 using CameraDesc_1_0 = ::android::hardware::automotive::evs::V1_0::CameraDesc;
 using CameraDesc_1_1 = ::android::hardware::automotive::evs::V1_1::CameraDesc;
 
+Enumerator::~Enumerator() {
+    if (mClientsMonitor != nullptr) {
+        mClientsMonitor->stopCollection();
+    }
+}
+
 bool Enumerator::init(const char* hardwareServiceName) {
     LOG(DEBUG) << "init";
 
@@ -799,7 +805,7 @@ void Enumerator::cmdDumpDevice(int fd, const hidl_vec<hidl_string>& options) {
 
                 // Starts a custom collection
                 auto result = mClientsMonitor->startCustomCollection(interval, duration);
-                if (!result) {
+                if (!result.ok()) {
                     LOG(ERROR) << "Failed to start a custom collection.  "
                                << result.error();
                     StringAppendF(&cameraInfo, "Failed to start a custom collection. %s\n",
@@ -812,7 +818,7 @@ void Enumerator::cmdDumpDevice(int fd, const hidl_vec<hidl_string>& options) {
                 }
 
                 auto result = mClientsMonitor->stopCustomCollection(deviceId);
-                if (!result) {
+                if (!result.ok()) {
                     LOG(ERROR) << "Failed to stop a custom collection.  "
                                << result.error();
                     StringAppendF(&cameraInfo, "Failed to stop a custom collection. %s\n",
