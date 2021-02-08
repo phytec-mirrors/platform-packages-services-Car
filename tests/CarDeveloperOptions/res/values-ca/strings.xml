@@ -2922,10 +2922,10 @@
     <string name="nfc_payment_app_and_desc" msgid="102312684211458190">"<xliff:g id="APP">%1$s</xliff:g> - <xliff:g id="DESCRIPTION">%2$s</xliff:g>"</string>
     <string name="nfc_payment_use_default" msgid="3098724195746409476">"Utilitza l\'aplicació predeterminada"</string>
     <string name="nfc_payment_favor_default" msgid="7555356982142464260">"Sempre"</string>
-    <string name="nfc_payment_favor_open" msgid="3739055715000436749">"Excepte quan hi hagi oberta una altra aplicació per pagar"</string>
+    <string name="nfc_payment_favor_open" msgid="3739055715000436749">"Excepte quan hi hagi oberta una altra aplicació de pagaments"</string>
     <string name="nfc_payment_pay_with" msgid="8412558374792061266">"En un terminal que tingui la funció Toca i paga, paga amb:"</string>
     <string name="nfc_how_it_works_title" msgid="6531433737926327904">"Pagar a la terminal"</string>
-    <string name="nfc_how_it_works_content" msgid="9174575836302449343">"Configura una aplicació per pagar. A continuació, apropa la part posterior del telèfon a un terminal amb el símbol de pagament sense contacte."</string>
+    <string name="nfc_how_it_works_content" msgid="9174575836302449343">"Configura una aplicació de pagaments. A continuació, apropa la part posterior del telèfon a un terminal amb el símbol de pagament sense contacte."</string>
     <string name="nfc_how_it_works_got_it" msgid="2432535672153247411">"Entesos"</string>
     <string name="nfc_more_title" msgid="2825856411836382264">"Més..."</string>
     <string name="nfc_payment_set_default_label" msgid="3997927342761454042">"Vols establir-ho com a preferència?"</string>
@@ -3115,7 +3115,7 @@
     <string name="keywords_display_adaptive_sleep" msgid="1695357782432822811">"pantalla atenuada, repòs, bateria, temps d\'espera, atenció, pantalla, inactivitat"</string>
     <string name="keywords_auto_rotate" msgid="4320791369951647513">"gir, canvi, rotació, retrat, paisatge, orientació, vertical, horitzontal"</string>
     <string name="keywords_system_update_settings" msgid="4419971277998986067">"actualitzar, android"</string>
-    <string name="keywords_zen_mode_settings" msgid="4103819458182535493">"no molestis, programar, notificacions, bloqueig, silenci, vibrar, mentre dormo, mentre treballo, concentració, so, silenciar, dia, dia laborable, cap de setmana, nit entre setmana, esdeveniment"</string>
+    <string name="keywords_zen_mode_settings" msgid="4103819458182535493">"no molestis, programar, notificacions, bloqueig, silenci, vibrar, mentre dormo, mentre treballo, concentració, so, silenciar, dia, dia laborable, dia entre setmana, cap de setmana, nit entre setmana, esdeveniment"</string>
     <string name="keywords_screen_timeout" msgid="4328381362313993666">"pantalla, temps de bloqueig, temps d\'espera, pantalla de bloqueig"</string>
     <string name="keywords_storage_settings" msgid="6422454520424236476">"memòria, memòria cau, dades, suprimir, esborrar, alliberar, espai"</string>
     <string name="keywords_bluetooth_settings" msgid="1152229891590622822">"connectat, dispositiu, auriculars, auriculars amb micro, altaveu, sense fil, vincular, música, multimèdia"</string>
