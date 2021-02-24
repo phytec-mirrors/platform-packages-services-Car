@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 java_library {
     name: "android.car.watchdoglib",
     srcs: [
@@ -19,7 +23,7 @@ java_library {
     ],
     static_libs: [
         "androidx.preference_preference",
-        "carwatchdog_aidl_interface-java",
+        "carwatchdog_aidl_interface-V2-java",
     ],
     product_variables: {
         pdk: {

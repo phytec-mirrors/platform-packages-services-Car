@@ -26,11 +26,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.net.ConnectivityManager;
-import android.net.IConnectivityManager;
+import android.net.VpnManager;
 import android.os.Bundle;
-import android.os.RemoteException;
-import android.os.ServiceManager;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.text.TextUtils;
@@ -66,8 +63,7 @@ public class AppManagementFragment extends SettingsPreferenceFragment
     private static final String KEY_FORGET_VPN = "forget_vpn";
 
     private PackageManager mPackageManager;
-    private ConnectivityManager mConnectivityManager;
-    private IConnectivityManager mConnectivityService;
+    private VpnManager mVpnManager;
 
     // VPN app info
     private final int mUserId = UserHandle.myUserId();
@@ -118,9 +114,7 @@ public class AppManagementFragment extends SettingsPreferenceFragment
         addPreferencesFromResource(R.xml.vpn_app_management);
 
         mPackageManager = getContext().getPackageManager();
-        mConnectivityManager = getContext().getSystemService(ConnectivityManager.class);
-        mConnectivityService = IConnectivityManager.Stub
-                .asInterface(ServiceManager.getService(Context.CONNECTIVITY_SERVICE));
+        mVpnManager = getContext().getSystemService(VpnManager.class);
 
         mPreferenceVersion = findPreference(KEY_VERSION);
         mPreferenceAlwaysOn = (RestrictedSwitchPreference) findPreference(KEY_ALWAYS_ON_VPN);
@@ -224,7 +218,7 @@ public class AppManagementFragment extends SettingsPreferenceFragment
     }
 
     private boolean setAlwaysOnVpn(boolean isEnabled, boolean isLockdown) {
-        return mConnectivityManager.setAlwaysOnVpnPackageForUser(mUserId,
+        return mVpnManager.setAlwaysOnVpnPackageForUser(mUserId,
                 isEnabled ? mPackageName : null, isLockdown, /* lockdownWhitelist */ null);
     }
 
@@ -249,7 +243,7 @@ public class AppManagementFragment extends SettingsPreferenceFragment
             mPreferenceForget.checkRestrictionAndSetDisabled(UserManager.DISALLOW_CONFIG_VPN,
                     mUserId);
 
-            if (mConnectivityManager.isAlwaysOnVpnPackageSupportedForUser(mUserId, mPackageName)) {
+            if (mVpnManager.isAlwaysOnVpnPackageSupportedForUser(mUserId, mPackageName)) {
                 // setSummary doesn't override the admin message when user restriction is applied
                 mPreferenceAlwaysOn.setSummary(R.string.vpn_always_on_summary);
                 // setEnabled is not required here, as checkRestrictionAndSetDisabled
@@ -263,7 +257,7 @@ public class AppManagementFragment extends SettingsPreferenceFragment
     }
 
     private String getAlwaysOnVpnPackage() {
-        return mConnectivityManager.getAlwaysOnVpnPackageForUser(mUserId);
+        return mVpnManager.getAlwaysOnVpnPackageForUser(mUserId);
     }
 
     private boolean isVpnAlwaysOn() {
@@ -320,13 +314,8 @@ public class AppManagementFragment extends SettingsPreferenceFragment
      * @return {@code true} if another VPN (VpnService or legacy) is connected or set as always-on.
      */
     private boolean isAnotherVpnActive() {
-        try {
-            final VpnConfig config = mConnectivityService.getVpnConfig(mUserId);
-            return config != null && !TextUtils.equals(config.user, mPackageName);
-        } catch (RemoteException e) {
-            Log.w(TAG, "Failure to look up active VPN", e);
-            return false;
-        }
+        final VpnConfig config = mVpnManager.getVpnConfig(mUserId);
+        return config != null && !TextUtils.equals(config.user, mPackageName);
     }
 
     public static class CannotConnectFragment extends InstrumentedDialogFragment {
