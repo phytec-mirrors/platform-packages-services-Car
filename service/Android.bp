@@ -16,6 +16,10 @@
 
 // Build the Car service.
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 genrule {
     name: "statslog-Car-java-gen",
     tools: ["stats-log-api-gen"],
@@ -38,7 +42,7 @@ common_lib_deps = [
     "android.hardware.automotive.vehicle-V2.0-java",
     "android.hardware.health-V1.0-java",
     "android.hardware.health-V2.0-java",
-    "android.hardware.automotive.occupant_awareness-java",
+    "android.hardware.automotive.occupant_awareness-V1-java",
     "vehicle-hal-support-lib",
     "car-systemtest",
     "com.android.car.procfsinspector-client",
@@ -152,4 +156,3 @@ android_library {
         },
     },
 }
-

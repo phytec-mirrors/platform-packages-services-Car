@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 cc_test {
     name: "piperegistration_test",
     test_suites: ["device-tests"],
@@ -31,8 +35,8 @@ cc_test {
         "libbinder",
         "libutils",
         "android.automotive.computepipe.router@1.0-impl",
-        "android.automotive.computepipe.runner-unstable-ndk_platform",
-        "android.automotive.computepipe.registry-unstable-ndk_platform",
+        "android.automotive.computepipe.runner-V2-ndk_platform",
+        "android.automotive.computepipe.registry-V2-ndk_platform",
     ],
 }
 
@@ -55,7 +59,7 @@ cc_test {
         "libbinder_ndk",
         "libutils",
         "android.automotive.computepipe.router@1.0-impl",
-        "android.automotive.computepipe.runner-unstable-ndk_platform",
-        "android.automotive.computepipe.registry-unstable-ndk_platform",
+        "android.automotive.computepipe.runner-V2-ndk_platform",
+        "android.automotive.computepipe.registry-V2-ndk_platform",
     ],
 }
