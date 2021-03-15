@@ -16,6 +16,11 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+cc_library_headers {
+    name: "graph_test_headers",
+    export_include_dirs: ["./includes"],
+}
+
 cc_test {
     name: "computepipe_prebuilt_graph_test",
     test_suites: ["device-tests"],
@@ -28,7 +33,7 @@ cc_test {
         "computepipe_runner_component",
         "libgtest",
         "libgmock",
-	      "libcomputepipeprotos",
+        "libcomputepipeprotos",
     ],
     shared_libs: [
         "libstubgraphimpl",
@@ -39,6 +44,7 @@ cc_test {
     ],
     header_libs: [
         "computepipe_runner_includes",
+        "graph_test_headers",
     ],
     include_dirs: [
         "packages/services/Car/computepipe",
@@ -67,7 +73,7 @@ cc_test {
     shared_libs: [
         "computepipe_grpc_graph",
         "libbase",
-	      "libcomputepipeprotos",
+        "libcomputepipeprotos",
         "libgrpc++",
         "libdl",
         "liblog",
@@ -75,6 +81,7 @@ cc_test {
     ],
     header_libs: [
         "computepipe_runner_includes",
+        "graph_test_headers",
     ],
     include_dirs: [
         "packages/services/Car/computepipe",
