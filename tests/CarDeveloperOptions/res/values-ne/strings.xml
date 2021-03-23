@@ -2240,7 +2240,7 @@
     <string name="background_activity_warning_dialog_title" msgid="2170790412855899678">"पृष्ठभूमिको गतिविधिलाई सीमित गर्ने हो?"</string>
     <string name="background_activity_warning_dialog_text" msgid="8242749826732375096">"तपाईंले कुनै एपको पृष्ठभूमिको गतिविधिलाई सीमित गर्नुभयो भने यसले सही तरिकाले काम नगर्न सक्छ"</string>
     <string name="background_activity_disabled_dialog_text" msgid="4234598000779459640">"यो एपलाई ब्याट्री अप्टिमाइज गर्न भनी सेट नगरिएको हुनाले तपाईं यसमा बन्देज लगाउन सक्नुहुन्न।\n\nअनुप्रयोगमा बन्देज लगाउन पहिले ब्याट्री अप्टिमाइजेसन सुविधा सक्रिय गर्नुहोस्।"</string>
-    <string name="device_screen_usage" msgid="4470485475363132750">"पूर्ण चार्ज भएदेखि स्क्रिनको प्रयोग"</string>
+    <string name="device_screen_usage" msgid="4470485475363132750">"पूर्ण चार्ज भएदेखि स्क्रिनको प्रयोगको अवधि"</string>
     <string name="power_usage_list_summary" msgid="4314438658308211057">"पूर्ण चार्ज भएदेखि ब्याट्रीको प्रयोग"</string>
     <string name="screen_usage_summary" msgid="263396144684078341">"पूर्ण चार्ज भएदेखि स्क्रिन सक्रिय रहेको समय"</string>
     <string name="device_usage_list_summary" msgid="8299017481332816368">"पूर्ण चार्ज भएदेखि यन्त्रको प्रयोग"</string>
@@ -2427,7 +2427,7 @@
     <string name="battery_used_by" msgid="840331542883421888">"<xliff:g id="APP">%2$s</xliff:g> ले प्रयोग गरेको <xliff:g id="PERCENT">%1$s</xliff:g>"</string>
     <string name="battery_overall_usage" msgid="5874301442415987516">"समग्र ब्याट्रीको <xliff:g id="PERCENT">%1$s</xliff:g>"</string>
     <string name="battery_detail_since_full_charge" msgid="3814176986148084378">"पछिल्लो पटक पूर्ण चार्ज भएदेखिको विश्लेषण"</string>
-    <string name="battery_last_full_charge" msgid="5624033030647170717">"पछिल्लो पटकको पूर्ण चार्ज"</string>
+    <string name="battery_last_full_charge" msgid="5624033030647170717">"पछिल्लो पटक पूर्ण चार्ज भएको समय"</string>
     <string name="battery_full_charge_last" msgid="4614554109170251301">"पूरा चार्ज हुँदा लगभग यति समय टिक्छ"</string>
     <string name="battery_footer_summary" msgid="4828444679643906943">"ब्याट्री प्रयोगसम्बन्धी डेटा अनुमानित हो र प्रयोगको अनुसार यो मान बदलिन सक्छ"</string>
     <string name="battery_detail_foreground" msgid="6616408559186553085">"सक्रिय प्रयोगमा रहँदा"</string>
@@ -2871,7 +2871,7 @@
     <string name="user_add_profile_item_title" msgid="4932743891449790664">"प्रतिबन्धित प्रोफाइल"</string>
     <string name="user_add_user_title" msgid="2320897397066676472">"नयाँ प्रयोगकर्ता थप्ने हो?"</string>
     <string name="user_add_user_message_long" msgid="686637203224195465">"तपाईं थप प्रयोगकर्ताहरू सिर्जना गरेर ती प्रयोगकर्तालाई यो यन्त्र प्रयोग गर्न दिन सक्नुहुन्छ। हरेक प्रयोगकर्ताको आफ्नै ठाउँ हुन्छ। उनीहरू यो ठाउँमा आफ्नै एप, वालपेपर आदिका लागि प्रयोग गर्न सक्छन्। उनीहरू सबैजनालाई असर पार्ने Wi-Fi जस्ता यन्त्रका सेटिङहरू पनि परिवर्तन गर्न सक्छन्।\n\nतपाईंले नयाँ प्रयोगकर्ता थप्दा उक्त व्यक्तिले आफ्नो ठाउँ सेटअप गर्नु पर्ने हुन्छ।\n\nसबै प्रयोगकर्ता अन्य सबै प्रयोगकर्ताले प्रयोग गर्ने एपहरू अद्यावधिक गर्न सक्छन्। तर पहुँचसम्बन्धी सेटिङ तथा सेवाहरू नयाँ प्रयोगकर्तामा नसर्न सक्छ।"</string>
-    <string name="user_add_user_message_short" msgid="1802594476285458254">"जब तपाईंले नयाँ प्रयोगकर्ता थप्नुहुन्छ, त्यो व्यक्तिले आफ्नो ठाउँ सेट गर्न आवश्यक छ।\n\nकुनै पनि प्रयोगकर्ताले सबै अन्य प्रयोगकर्ताहरूका लागि एपहरू अद्यावधिक गर्न सक्छन्।"</string>
+    <string name="user_add_user_message_short" msgid="1802594476285458254">"तपाईंले नयाँ प्रयोगकर्ता थप्नुभयो भने ती प्रयोगकर्ताले आफ्नो स्पेस सेट गर्नु पर्ने हुन्छ।\n\nसबै प्रयोगकर्ताले अरू प्रयोगकर्ताका एपहरू अपडेट गर्न सक्छन्।"</string>
     <string name="user_setup_dialog_title" msgid="6748950002206392396">"अहिले प्रयोगकर्ता सेटअप गर्ने हो?"</string>
     <string name="user_setup_dialog_message" msgid="2988559933258353919">"यी व्यक्ति यन्त्र यो यन्त्र चलाउन र आफ्नो ठाउँ सेट गर्न उपलब्ध छन् भन्ने कुरा सुनिश्चित गर्नुहोस्"</string>
     <string name="user_setup_profile_dialog_message" msgid="7611900802824048526">"अहिले प्रोफाइल सेटअप गर्ने हो?"</string>
@@ -2900,7 +2900,7 @@
     <string name="user_guest" msgid="6226240869459683235">"अतिथि"</string>
     <string name="user_exit_guest_title" msgid="7279886200373071797">"अतिथि हटाउनुहोस्"</string>
     <string name="user_exit_guest_confirm_title" msgid="4767911571671099844">"अतिथि हटाउने हो?"</string>
-    <string name="user_exit_guest_confirm_message" msgid="6955182181145748919">"यस सत्रमा सबै एपहरू र डेटा मेटाइनेछ।"</string>
+    <string name="user_exit_guest_confirm_message" msgid="6955182181145748919">"यो सत्रमा भएका सबै एपहरू र डेटा मेटाइने छ।"</string>
     <string name="user_exit_guest_dialog_remove" msgid="1878866060881115716">"हटाउनुहोस्"</string>
     <string name="user_enable_calling" msgid="864760054792249503">"फोन गर्ने सेवा सक्रिय गर्नुहोस्"</string>
     <string name="user_enable_calling_sms" msgid="3450252891736718793">"फोन कल तथा SMS सक्षम पार्नुहोस्"</string>
